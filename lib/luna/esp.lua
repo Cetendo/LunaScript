@@ -1,7 +1,7 @@
 local enabled, enableOnAim = true, false
 local xValue, yValue, scaleValue = 0, 0, 50
 local color = {r = 0, g = 1, b = 0, a = 1}
-local maxDistance = 400
+local maxDistance, disFrom = 400, 1
 local showDistance, showWanted, showRank, showLanguage, showName, showTags, showHealth, showArmor, showKD, showMoney, showWeapon, showInMyVehicle, showVehicle, showSpeed, hideInterior, showBounty =
     true, true, true, true, true, true, false, false, false, false, true, true, true, false, false, false	local function getName(pid, inVehicle)
 local value = ""
@@ -130,7 +130,8 @@ local function renderESP()
         return
     end
     local myPed = players.user_ped()
-    local myPos = players.get_cam_pos(players.user())
+    local myPos = players.get_position(players.user())
+    local myCamPos = players.get_cam_pos(players.user())
     for _, pid in players.list(false) do
         local ped = PLAYER.GET_PLAYER_PED(pid)
         if PLAYER.IS_PLAYER_DEAD(pid) or not ENTITY.IS_ENTITY_ON_SCREEN(ped) or
@@ -139,7 +140,8 @@ local function renderESP()
         end
         local pPos = players.get_position(pid)
         local dist = v3.distance(myPos, pPos)
-        if dist > maxDistance then
+        local distCam = v3.distance(myCamPos, pPos)
+        if (dist > maxDistance or disFrom == 1 ) and (distCam > maxDistance or disFrom == 2) then
             goto continue
         end
         local vehicle = PED.IS_PED_SITTING_IN_ANY_VEHICLE(ped) and PED.GET_VEHICLE_PED_IS_IN(ped, false)
@@ -263,6 +265,13 @@ local maxDistSlider = menu.slider(espMenu, "Maximum distance", {}, "", 5, 10000,
     maxDistance = val
 end)
 maxDistance = menu.get_value(maxDistSlider)
+menu.list_select(espMenu,"Distance From", {}, "", {
+    {1, "Camera"},
+    {2, "Player"},
+    {3, "Camera and Player"},
+}, 1, function(value, menu_name, prev_value, click_type)
+    disFrom = value
+end)
 local distToggle = menu.toggle(espMenu, "Show distance", {}, "", function(on)
     showDistance = on
 end, showDistance)
