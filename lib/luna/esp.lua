@@ -1,5 +1,5 @@
 local enabled, enableOnAim = true, false
-local xValue, yValue, scaleValue = 0, 0, 50
+local xValue, yValue, scaleValue = 0, -5, 50
 local color = {r = 0, g = 1, b = 0, a = 1}
 local maxDistance, disFrom = 400, 1
 local showDistance, showWanted, showRank, showLanguage, showName, showTags, showHealth, showArmor, showKD, showMoney, showWeapon, showInMyVehicle, showVehicle, showSpeed, hideInterior, showBounty =
