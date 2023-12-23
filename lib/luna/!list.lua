@@ -1,4 +1,5 @@
 root = menu.my_root()
 shadow = menu.shadow_root()
-espMenu = root:list("ESP",{},"")
+online = root:list("Online",{},"")
+    espMenu = online:list("ESP",{},"")
 misc = root:list("Misc",{},"")

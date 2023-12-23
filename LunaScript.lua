@@ -1,4 +1,6 @@
--- Auto Updater from https://github.com/hexarobi/stand-lua-auto-updater
+---------------------------------- Auto Updater from https://github.com/hexarobi/stand-lua-auto-updater -----------------------------------
+----------------------------------------------------------- DO NOT TOUTCH -----------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------------------------
 local status, auto_updater = pcall(require, "auto-updater")
 if not status then
     local auto_update_complete = nil util.toast("Installing auto-updater...", TOAST_ALL)
@@ -21,84 +23,57 @@ if not status then
 end
 if auto_updater == true then error("Invalid auto-updater lib. Please delete your Stand/Lua Scripts/lib/auto-updater.lua and try again") end
 -------------------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------- DO NOT TOUTCH -----------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+local function createDependency(name, relpath, beginsWith)
+    return {
+        name = name,
+        source_url = "https://raw.githubusercontent.com/Cetendo/LunaScript/main/lib/luna/" .. relpath,
+        script_relpath = "lib/luna/" .. relpath,
+        verify_file_begins_with = beginsWith,
+        is_required = true
+    }
+end
+
 local auto_update_config = {
-    source_url="https://raw.githubusercontent.com/Cetendo/LunaScript/main/LunaScript.lua",
-    script_relpath=SCRIPT_RELPATH,
-    verify_file_begins_with="--",
-    dependencies={
-        {
-            name="list",
-            source_url="https://raw.githubusercontent.com/Cetendo/LunaScript/main/lib/luna/!list.lua",
-            script_relpath="lib/luna/!list.lua",
-            verify_file_begins_with="root",
-            is_required=true,
-        },
-        {
-            name="table",
-            source_url="https://raw.githubusercontent.com/Cetendo/LunaScript/main/lib/luna/!table.lua",
-            script_relpath="lib/luna/!table.lua",
-            verify_file_begins_with="--",
-            is_required=true,
-        },{
-            name="esp",
-            source_url="https://raw.githubusercontent.com/Cetendo/LunaScript/main/lib/luna/esp.lua",
-            script_relpath="lib/luna/esp.lua",
-            verify_file_begins_with="local",
-            is_required=true,
-        },{
-            name="functions",
-            source_url="https://raw.githubusercontent.com/Cetendo/LunaScript/main/lib/luna/functions.lua",
-            script_relpath="lib/luna/functions.lua",
-            verify_file_begins_with="--",
-            is_required=true,
-        },
+    source_url = "https://raw.githubusercontent.com/Cetendo/LunaScript/main/LunaScript.lua",
+    script_relpath = SCRIPT_RELPATH,
+    verify_file_begins_with = "--",
+    dependencies = {
+        createDependency("list", "!list.lua", "root"),
+        createDependency("table", "!table.lua", "--"),
+        createDependency("esp", "esp.lua", "local"),
+        createDependency("functions", "functions.lua", "--"),
+        createDependency("orb", "orb.lua", "local")
     }
 }
+
 -- Directory of the script
-ScriptDirectory = filesystem.scripts_dir()
+local ScriptDirectory, lib_folder = filesystem.scripts_dir(), filesystem.scripts_dir().."\\lib\\luna\\"
 util.require_natives('2944a')
 util.require_natives(1681379138)
+util.require_natives("2944a", "g-uno")
 
-function isnt_dev()
-    if filesystem.exists(ScriptDirectory.."luna.dev") then
-    util.toast("Welcome to LunaScript! "..players.get_name(players.user()).." You are a developer.")
+-- Update and Load Libraries Function
+local function update_and_load()
+    if not filesystem.exists(ScriptDirectory.."luna.dev") and async_http.have_access() and auto_updater.run_auto_update(auto_update_config) then 
+        return 
     end
-    return not filesystem.exists(ScriptDirectory.."luna.dev")
-end
--- auto update if user is not a developer
-if isnt_dev() then
-    if async_http.have_access() then
-        while auto_updater.run_auto_update(auto_update_config) do
-            util.toast("Checking for updates")
-            return
-        end
-    else
-        util.toast("Unable to update the script due to no internet access")
+    if not filesystem.is_dir(lib_folder) then 
+        util.toast("No lib folder found") 
+        return 
     end
-end
-
--- Load the lib folder
-local lib_folder = ScriptDirectory.."\\lib\\luna\\"
-if not filesystem.is_dir(lib_folder) then 
-    util.toast("No lib folder found"); 
-    return 
-end
-for _, path in filesystem.list_files(lib_folder) do
-    util.try_run(function() 
-        require(path:match("Lua Scripts\\(.+)%.lua$"):gsub("\\", "."):gsub("^.", "")) 
-    end)
+    for _, path in filesystem.list_files(lib_folder) do
+        util.try_run(function() 
+            require(path:match("Lua Scripts\\(.+)%.lua$"):gsub("\\", "."):gsub("^.", "")) 
+        end)
+    end
 end
 
--- Manually check for updates with a menu option
-menu.action(misc, "Check for Update", {}, "The script will automatically check for updates at most daily, but you can manually check using this option anytime.", function()
-    if isnt_dev() then
-        if async_http.have_access() then
-            auto_update_config.check_interval = 0
-            util.toast("Checking for updates")
-            auto_updater.run_auto_update(auto_update_config)
-        else
-            toast"Unable to update the script due to no internet access"
-        end
-    end
-end)
+-- Execute Function and Setup Menu
+update_and_load()
+menu.action(misc, "Check for Update", {}, "Manually check for updates.", update_and_load)
+if filesystem.exists(ScriptDirectory.."luna.dev") then util.toast("Welcome, Developer: "..SOCIALCLUB.SC_ACCOUNT_INFO_GET_NICKNAME()) end
+
 util.keep_running();
