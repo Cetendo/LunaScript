@@ -1,8 +1,18 @@
+local GlobalplayerBD = 2657971
+
+function bitTest(bits, place)
+	return (bits & (1 << place)) != 0
+end
+
+function isPlayerUsingOrbitalCannon(playerID)
+	return bitTest(memory.read_int(memory.script_global(GlobalplayerBD + 1 + (playerID * 465) + 426)), 0) -- Global_2657971[PLAYER::PLAYER_ID() /*465*/].f_426
+end
+
 local orb_list = {}
 online:toggle_loop("Draw Orbital Cannon Position", {""}, "", function()
     for _, pid in ipairs(players.list_except(true)) do
         local cam = players.get_cam_pos(pid)
-        if (memory.read_int(memory.script_global(2657921 + pid * 463 + 425)) & 1) ~= 0 then
+        if isPlayerUsingOrbitalCannon(pid) then
             repeat cam.z = select(2, util.get_ground_z(cam.x, cam.y)) or cam.z; wait() until cam.z
             DRAW_MARKER(28, cam, v3(), v3(), 1.0, 1.0, v3.distance(cam, cam), 255, 0, 255, 105, false, false)
             if not orb_list[pid] then
